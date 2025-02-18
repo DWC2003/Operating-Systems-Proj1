@@ -6,7 +6,7 @@
 int storeStock = 50;
 pthread_mutex_t lock;
 struct Input{
-        int tasks[10];
+        int tasks[100];
         int id;
 };
 
@@ -14,46 +14,52 @@ void* runner(void* param){
     int i;
     struct Input *info = (struct Input*)param;
 
-    static int delnum = 0;
+    int delnum = 0;
     static int shipnum = 0;
     bool flag = true;
 
-    while (delnum <= 9 || shipnum <= 9){
-        if ((int) info->id == 0){
-            if (delnum == 10){
+    while (delnum < 10 || shipnum < 100){
+        pthread_mutex_lock(&lock);
+
+        if (info->id < 20){
+            if (delnum >= 10){
+                pthread_mutex_unlock(&lock);
                 continue;
             }
             if ((storeStock - info->tasks[delnum]) < 0){
+                if (shipnum >= 35){
+                        printf("\nDeliveries from truck %d could not be finished due to lack of stock (%d deliveries remaining).\n", (info->id+1), 10-(delnum+1));
+                        pthread_mutex_unlock(&lock);
+                        break;
+                    }
                 if (flag){
-                    printf("\n Delivery number %d (%d products) could not leave due to lack of stock. Must wait for shipment.\n", (delnum+1), info->tasks[delnum]);
+                    printf("\n Delivery number %d (%d products) in truck %d could not leave due to lack of stock. Must wait for shipment.\n", (delnum+1), info->tasks[delnum], (info->id + 1));
                     flag = !flag;
                 }
                 else{
+                    pthread_mutex_unlock(&lock);
                     continue;
                 }
             }
             else{
-                pthread_mutex_lock(&lock);
-                printf("\n Delivery number %d has left.\n", (delnum+1));
+                printf("\n Delivery number %d has left in truck %d with %d products.\n", (delnum+1), (info->id + 1), info->tasks[delnum]);
                 storeStock -= info->tasks[delnum];
                 printf("Current stock: %d\n", storeStock);
                 delnum++;
                 flag = true;
-                pthread_mutex_unlock(&lock);
             }
         } 
-        else {
-            if (shipnum == 10){
-                continue;
+        else{
+            if (shipnum >= 35){
+                pthread_mutex_unlock(&lock);
+                break;
             }
-            pthread_mutex_lock(&lock);
             printf("\n Shipment number %d has arrived.\n", (shipnum+1));
             storeStock += info->tasks[shipnum];
             printf("Current stock: %d\n", storeStock);
             shipnum++;
-            pthread_mutex_unlock(&lock);
-
         }
+        pthread_mutex_unlock(&lock);
         sleep(1);
 
     }
@@ -61,36 +67,42 @@ void* runner(void* param){
 }
 
 int main(int argc, char *argv[]){
-    struct Input *delivery = (struct Input*)
-        malloc(sizeof(struct Input));
-    struct Input *shipment = (struct Input*)
-        malloc(sizeof(struct Input));
-    delivery->id = 0;
-    shipment->id = 1;
     int i;
-
-    for (i = 0; i < 10; i++){
-        delivery->tasks[i] = i*10;
-        shipment->tasks[i] = i*10;
+    struct Input *deliveries[20];
+    for (i = 0; i < 20; i++){
+        deliveries[i] = (struct Input*) malloc(sizeof(struct Input));
+        deliveries[i]->id = i;
+        int j;
+        for (j = 0; j < 10; j++){
+            deliveries[i]->tasks[j] = (j+1)*10;
+        }
+    }
+      
+    struct Input *shipment = (struct Input*) malloc(sizeof(struct Input));
+    shipment->id = 20;
+    for (i = 0; i < 35; i++){
+        shipment->tasks[i] = 100+i;
     }
 
     printf("\nStart of day stock: %d\n", storeStock);
 
-    pthread_t tid[2];
+    pthread_t tid[21];
     pthread_attr_t attr;
     pthread_mutex_init(&lock, NULL);
     pthread_attr_init(&attr);
 
+    for (i = 0; i < 20; i++){
+        pthread_create(&tid[i], &attr, runner, deliveries[i]);
+
+    }
+    pthread_create(&tid[20], &attr, runner, shipment);
     
-    pthread_create(&tid[0], &attr, runner, delivery);
-    pthread_create(&tid[1], &attr, runner, shipment);
 
-
-    for (i = 0; i < 2; i++){
+    for (i = 0; i < 21; i++){
         pthread_join(tid[i], NULL);
     }
 
     pthread_mutex_destroy(&lock);
 
-    printf("\nEnd of day Stock = %d\n", storeStock);
+    printf("\nEnd of day stock = %d\n", storeStock);
 }
