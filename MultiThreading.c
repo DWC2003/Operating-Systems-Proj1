@@ -28,12 +28,12 @@ void* runner(void* param){
             }
             if ((storeStock - info->tasks[delnum]) < 0){
                 if (shipnum >= 35){
-                        printf("\nDeliveries from truck %d could not be finished due to lack of stock (%d deliveries remaining).\n", (info->id+1), 10-(delnum+1));
+                        printf("\nNot enough stock for truck %d(%d deliveries remaining). \n", (info->id+1), 10-(delnum+1));
                         pthread_mutex_unlock(&lock);
                         break;
                     }
                 if (flag){
-                    printf("\n Delivery number %d (%d products) in truck %d could not leave due to lack of stock. Must wait for shipment.\n", (delnum+1), info->tasks[delnum], (info->id + 1));
+                    printf("\n Delivery number %d (%d products) in truck %d could not leave due to lack of stock. Must wait for shipment. F\n", (delnum+1), info->tasks[delnum], (info->id + 1));
                     flag = !flag;
                 }
                 else{
@@ -42,7 +42,7 @@ void* runner(void* param){
                 }
             }
             else{
-                printf("\n Delivery number %d has left in truck %d with %d products.\n", (delnum+1), (info->id + 1), info->tasks[delnum]);
+                printf("\n Delivery number %d has left in truck %d with %d products. S\n", (delnum+1), (info->id + 1), info->tasks[delnum]);
                 storeStock -= info->tasks[delnum];
                 printf("Current stock: %d\n", storeStock);
                 delnum++;
