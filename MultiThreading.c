@@ -3,12 +3,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+int netProfit = 0;
 int storeStock = 250;
 int trucks = 0;
 pthread_mutex_t lock;
+pthread_mutex_t lock2;
+
 struct Input{
-        int tasks[100];
-        int id;
+    int tasks[100];
+    int id;
 };
 
 void* runner(void* param){
@@ -46,8 +49,16 @@ void* runner(void* param){
                 printf("\n Delivery number %d has left in truck %d with %d products. S\n", (delnum+1), ((info->id) + 1), info->tasks[delnum]);
                 storeStock -= info->tasks[delnum];
                 printf("Current stock: %d\n", storeStock);
+
+                pthread_mutex_lock(&lock2);
+                netProfit += 2*info->tasks[delnum];
+                printf("Current net profit: %d\n", netProfit);
+                pthread_mutex_unlock(&lock2);
+
                 delnum++;
                 flag = true;
+
+                
             }
         } 
         else{
@@ -58,6 +69,11 @@ void* runner(void* param){
             printf("\n Shipment number %d has arrived with %d products.\n", (shipnum+1), (info->tasks[shipnum]));
             storeStock += info->tasks[shipnum];
             printf("Current stock: %d\n", storeStock);
+
+            pthread_mutex_lock(&lock2);
+            netProfit -= info->tasks[shipnum];
+            printf("Current net profit: %d\n", netProfit);
+            pthread_mutex_unlock(&lock2);
             shipnum++;
         }
         pthread_mutex_unlock(&lock);
@@ -92,6 +108,7 @@ int main(int argc, char *argv[]){
     pthread_t tid[trucks];
     pthread_attr_t attr;
     pthread_mutex_init(&lock, NULL);
+    pthread_mutex_init(&lock2, NULL);
     pthread_attr_init(&attr);
 
     for (i = 0; i < trucks; i++){
@@ -107,5 +124,5 @@ int main(int argc, char *argv[]){
 
     pthread_mutex_destroy(&lock);
 
-    printf("\nEnd of day stock = %d\n", storeStock);
+    printf("\nEnd of day stock: %d\nEnd of day net profit: %d\n", storeStock, netProfit);
 }
