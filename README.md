@@ -6,6 +6,6 @@ These programs fulfill the requirements for the first project of my Operating Sy
 -Instructions-
 Ensure that you are running a linux environment before attempting to compile these programs as they use linux-specific libraries. 
 
-To run the programs, you must first compile them in some way. It is recommended to use gcc and run the command "gcc MultiThreading.c -o MultiThreading" in the terminal (replace the program name with whichever program you want to compile).
+To run the programs, you must first compile them in some way. It is recommended to use gcc and run the command "gcc [program name] -o [program name" in the terminal (replace the program name with whichever program you want to compile).
 
 Once compiled, you can run the program from the terminal by navigating to the correct directory and running the command "./[program name] [arg]" (replace the program name with whichever program you want to run and insert an integer for the argument which determines the number of outgoing delivery trucks). There are 35 shipments in a day and each delivery truck has 10 deliveries to make with a varying number of products in each, so the number of delivery trucks you specify will determine if all shipments for the day finish or not.
